@@ -6,6 +6,12 @@ public class Character : MonoBehaviour
 {
     [SerializeField] AnimationController _animationController;
     // Start is called before the first frame update
+
+    void Awake()//it's like start but done before Start()
+    {
+        _characterController = gameObject.GetComponent<CharacterController>();
+    }
+
     void Start()
     {
         //IdleState _idleState = new IdleState();
@@ -15,8 +21,9 @@ public class Character : MonoBehaviour
         _stateDic.Add(eState.IDLE, new IdleState());
         _stateDic.Add(eState.WAIT, new WaitState());
         _stateDic.Add(eState.KICK, new KickState());
+        _stateDic.Add(eState.WALK, new WalkState());
 
-        for(int i = 0; i<_stateDic.Count;i++)
+        for (int i = 0; i<_stateDic.Count;i++)
         {
             eState state = (eState)i;
             _stateDic[state].SetCharacter(this);
@@ -26,13 +33,14 @@ public class Character : MonoBehaviour
         //_waitState.SetCharacter(this);
         //_kickState.SetCharacter(this);
 
-        ChangeState(eState.IDLE);
+        ChangeState(eState.WALK);
     }
 
     // Update is called once per frame
     void Update()
     {
         UpdateState();
+        UpdateMove();
     }
 
     public enum eState
@@ -40,6 +48,7 @@ public class Character : MonoBehaviour
         IDLE,
         WAIT,
         KICK, 
+        WALK,
     }
 
     public void ChangeState(eState state)
@@ -106,5 +115,29 @@ public class Character : MonoBehaviour
     public void PlayAnimation(string trigger, System.Action endCallback)
     {
         _animationController.Play(trigger, endCallback);
+    }
+
+    //Movement
+
+    CharacterController _characterController;
+    float _moveSpeed = 0.0f;
+    void UpdateMove()
+    {
+        //내가 결정한 이동 방향과 속도
+        Vector3 moveDirection = Vector3.forward;
+
+        //내가 결정한 이동 방향과 속도에 따른 속도 벡터
+        Vector3 moveVelocity = moveDirection*_moveSpeed;
+
+        Vector3 gravityVelocity = Vector3.down * 9.8f;//중력
+
+        //내가 결정한 속도 벡터와 중력 벡터를 고려한 최종속도 벡터
+        Vector3 finalVelocity = (moveVelocity + gravityVelocity) * Time.deltaTime;
+        _characterController.Move(finalVelocity);
+    }
+
+    public void StartWalk(float speed)
+    {
+        _moveSpeed = speed;
     }
 }
